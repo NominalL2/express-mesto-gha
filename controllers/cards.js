@@ -19,7 +19,11 @@ module.exports.postCard = async (req, res) => {
     const newCard = await card.save();
     res.status(201).json(newCard);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (error.name === 'ValidationError') {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: error.message });
+    }
   }
 };
 
@@ -36,5 +40,55 @@ module.exports.deleteCard = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports.likeCard = async (req, res) => {
+  const { cardId } = req.params;
+  const userId = req.user._id;
+
+  try {
+    const like = await Card.findByIdAndUpdate(
+      cardId,
+      { $addToSet: { likes: userId } },
+      { new: true },
+    );
+
+    if (!like) {
+      res.status(404).json({ message: 'Карточка не найдена' });
+    } else {
+      res.status(200).json(like);
+    }
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: error.message });
+    }
+  }
+};
+
+module.exports.dislikeCard = async (req, res) => {
+  const { cardId } = req.params;
+  const userId = req.user._id;
+
+  try {
+    const dislike = await Card.findByIdAndUpdate(
+      cardId,
+      { $pull: { likes: userId } },
+      { new: true },
+    );
+
+    if (!dislike) {
+      res.status(404).json({ message: 'Карточка не найдена' });
+    } else {
+      res.status(200).json(dislike);
+    }
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: error.message });
+    }
   }
 };
