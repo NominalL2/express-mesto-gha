@@ -27,7 +27,7 @@ app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
 app.use(router.use('*', (req, res) => {
-  res.status(404).send('Not Found');
+  res.status(404).json({ message: 'Not Found' });
 }));
 
 app.listen(PORT);
