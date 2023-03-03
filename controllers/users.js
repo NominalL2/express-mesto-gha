@@ -50,7 +50,7 @@ module.exports.patchUserName = async (req, res) => {
   const userId = req.user._id;
 
   try {
-    const newName = await User.findByIdAndUpdate(userId, { name }, { new: true });
+    const newName = await User.findByIdAndUpdate(userId, { name }, { new: false });
 
     if (newName) {
       res.status(200).json(newName);

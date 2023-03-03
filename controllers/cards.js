@@ -39,7 +39,11 @@ module.exports.deleteCard = async (req, res) => {
       res.json({ message: 'Карточка успешно удалена' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (error.name === 'CastError') {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: error.message });
+    }
   }
 };
 
