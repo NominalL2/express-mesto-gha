@@ -64,7 +64,7 @@ module.exports.likeCard = async (req, res) => {
       res.status(200).json(like);
     }
   } catch (error) {
-    if (error.name === 'ValidationError') {
+    if (error.name === 'CastError') {
       res.status(400).json({ message: error.message });
     } else {
       res.status(500).json({ message: error.message });
@@ -89,7 +89,7 @@ module.exports.dislikeCard = async (req, res) => {
       res.status(200).json(dislike);
     }
   } catch (error) {
-    if (error.name === 'ValidationError') {
+    if (error.name === 'CastError') {
       res.status(400).json({ message: error.message });
     } else {
       res.status(500).json({ message: error.message });

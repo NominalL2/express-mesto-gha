@@ -45,12 +45,16 @@ module.exports.postUser = async (req, res) => {
   }
 };
 
-module.exports.patchUserName = async (req, res) => {
-  const { name, about } = req.body;
+module.exports.patchUser = async (req, res) => {
+  const { name, about, avatar } = req.body;
   const userId = req.user._id;
 
   try {
-    const newName = await User.findByIdAndUpdate(userId, { name, about }, { new: true });
+    const newName = await User.findByIdAndUpdate(
+      userId,
+      { name, about, avatar },
+      { new: true, runValidators: true },
+    );
 
     if (newName) {
       res.status(200).json(newName);
