@@ -14,10 +14,15 @@ module.exports.getUser = async (req, res) => {
 
   try {
     const user = await User.findById(userId);
-    res.json(user);
+
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(404).json({ message: error.message });
+      res.status(400).json({ message: error.message });
     } else {
       res.status(500).json({ message: error.message });
     }
