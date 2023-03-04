@@ -1,11 +1,12 @@
 const User = require('../models/user');
+const { errorCode, errorNotFoundCode, errorIncorrectCode } = require('../errors');
 
 module.exports.getUsers = async (req, res) => {
   try {
     const users = await User.find();
     res.json(users);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(errorCode).json({ message: 'Произошла ошибка' });
   }
 };
 
@@ -18,13 +19,13 @@ module.exports.getUser = async (req, res) => {
     if (user) {
       res.json(user);
     } else {
-      res.status(404).json({ message: 'User not found' });
+      res.status(errorNotFoundCode).json({ message: 'User not found' });
     }
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(400).json({ message: error.message });
+      res.status(errorIncorrectCode).json({ message: 'Некорректный Id' });
     } else {
-      res.status(500).json({ message: error.message });
+      res.status(errorCode).json({ message: 'Произошла ошибка' });
     }
   }
 };
@@ -38,34 +39,34 @@ module.exports.postUser = async (req, res) => {
     res.status(201).json(newUser);
   } catch (error) {
     if (error.name === 'ValidationError') {
-      res.status(400).json({ message: error.message });
+      res.status(errorIncorrectCode).json({ message: 'ValidationError' });
     } else {
-      res.status(500).json({ message: error.message });
+      res.status(errorCode).json({ message: 'Произошла ошибка' });
     }
   }
 };
 
 module.exports.patchUser = async (req, res) => {
-  const { name, about, avatar } = req.body;
+  const { name, about } = req.body;
   const userId = req.user._id;
 
   try {
     const newName = await User.findByIdAndUpdate(
       userId,
-      { name, about, avatar },
+      { name, about },
       { new: true, runValidators: true },
     );
 
     if (newName) {
       res.status(200).json(newName);
     } else {
-      res.status(404).json({ message: 'User not found' });
+      res.status(errorNotFoundCode).json({ message: 'User not found' });
     }
   } catch (error) {
     if (error.name === 'ValidationError') {
-      res.status(400).json({ message: error.message });
+      res.status(errorIncorrectCode).json({ message: 'ValidationError' });
     } else {
-      res.status(500).json({ message: error.message });
+      res.status(errorCode).json({ message: 'Произошла ошибка' });
     }
   }
 };
@@ -75,18 +76,22 @@ module.exports.patchUserAvatar = async (req, res) => {
   const userId = req.user._id;
 
   try {
-    const newAvatar = await User.findByIdAndUpdate(userId, { avatar }, { new: true });
+    const newAvatar = await User.findByIdAndUpdate(
+      userId,
+      { avatar },
+      { new: true, runValidators: true },
+    );
 
     if (newAvatar) {
       res.status(200).json(newAvatar);
     } else {
-      res.status(404).json({ message: 'User not found' });
+      res.status(errorNotFoundCode).json({ message: 'User not found' });
     }
   } catch (error) {
     if (error.name === 'ValidationError') {
-      res.status(400).json({ message: error.message });
+      res.status(errorIncorrectCode).json({ message: 'ValidationError' });
     } else {
-      res.status(500).json({ message: error.message });
+      res.status(errorCode).json({ message: 'Произошла ошибка' });
     }
   }
 };
