@@ -62,7 +62,7 @@ module.exports.likeCard = async (req, res) => {
     if (!like) {
       res.status(errorNotFoundCode).json({ message: 'Карточка не найдена' });
     } else {
-      res.status(200).json(like);
+      res.json(like);
     }
   } catch (error) {
     if (error.name === 'CastError') {
@@ -87,7 +87,7 @@ module.exports.dislikeCard = async (req, res) => {
     if (!dislike) {
       res.status(errorNotFoundCode).json({ message: 'Карточка не найдена' });
     } else {
-      res.status(200).json(dislike);
+      res.json(dislike);
     }
   } catch (error) {
     if (error.name === 'CastError') {

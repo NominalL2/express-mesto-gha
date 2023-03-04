@@ -58,7 +58,7 @@ module.exports.patchUser = async (req, res) => {
     );
 
     if (newName) {
-      res.status(200).json(newName);
+      res.json(newName);
     } else {
       res.status(errorNotFoundCode).json({ message: 'User not found' });
     }
@@ -83,7 +83,7 @@ module.exports.patchUserAvatar = async (req, res) => {
     );
 
     if (newAvatar) {
-      res.status(200).json(newAvatar);
+      res.json(newAvatar);
     } else {
       res.status(errorNotFoundCode).json({ message: 'User not found' });
     }
