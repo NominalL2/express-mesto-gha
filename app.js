@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const { errorNotFoundCode } = require('./errors');
 
 const router = express.Router();
 
@@ -27,7 +28,7 @@ app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
 app.use(router.use('*', (req, res) => {
-  res.status(404).json({ message: 'Not Found' });
+  res.status(errorNotFoundCode).json({ message: 'Not Found' });
 }));
 
 app.listen(PORT);
