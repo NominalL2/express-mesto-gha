@@ -2,6 +2,7 @@
   "extends": "airbnb-base",
 
   "rules": {
-    "no-underscore-dangle": "off"
+    "no-underscore-dangle": "off",
+    "max-classes-per-file": "off"
   }
 }

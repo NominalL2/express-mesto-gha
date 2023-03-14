@@ -1,16 +1,18 @@
+const bcrypt = require('bcryptjs');
+const validator = require('validator');
 const User = require('../models/user');
-const { errorCode, errorNotFoundCode, errorIncorrectCode } = require('../errors');
+const { NotFoundError, IncorrectError, ExistsEmailError } = require('../errors');
 
-module.exports.getUsers = async (req, res) => {
+module.exports.getUsers = async (req, res, next) => {
   try {
     const users = await User.find();
     res.json(users);
   } catch (error) {
-    res.status(errorCode).json({ message: 'Произошла ошибка' });
+    next();
   }
 };
 
-module.exports.getUser = async (req, res) => {
+module.exports.getUser = async (req, res, next) => {
   const { userId } = req.params;
 
   try {
@@ -19,18 +21,18 @@ module.exports.getUser = async (req, res) => {
     if (user) {
       res.json(user);
     } else {
-      res.status(errorNotFoundCode).json({ message: 'User not found' });
+      throw new NotFoundError('User not found');
     }
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(errorIncorrectCode).json({ message: 'Некорректный Id' });
+      next(new IncorrectError('Некорректный Id'));
     } else {
-      res.status(errorCode).json({ message: 'Произошла ошибка' });
+      next(error);
     }
   }
 };
 
-module.exports.postUser = async (req, res) => {
+module.exports.postUser = async (req, res, next) => {
   const { name, about, avatar } = req.body;
   const user = new User({ name, about, avatar });
 
@@ -39,14 +41,14 @@ module.exports.postUser = async (req, res) => {
     res.status(201).json(newUser);
   } catch (error) {
     if (error.name === 'ValidationError') {
-      res.status(errorIncorrectCode).json({ message: 'ValidationError' });
+      next(new IncorrectError('ValidationError'));
     } else {
-      res.status(errorCode).json({ message: 'Произошла ошибка' });
+      next();
     }
   }
 };
 
-module.exports.patchUser = async (req, res) => {
+module.exports.patchUser = async (req, res, next) => {
   const { name, about } = req.body;
   const userId = req.user._id;
 
@@ -60,18 +62,18 @@ module.exports.patchUser = async (req, res) => {
     if (newName) {
       res.json(newName);
     } else {
-      res.status(errorNotFoundCode).json({ message: 'User not found' });
+      throw new NotFoundError('User not found');
     }
   } catch (error) {
     if (error.name === 'ValidationError') {
-      res.status(errorIncorrectCode).json({ message: 'ValidationError' });
+      next(new IncorrectError('ValidationError'));
     } else {
-      res.status(errorCode).json({ message: 'Произошла ошибка' });
+      next(error);
     }
   }
 };
 
-module.exports.patchUserAvatar = async (req, res) => {
+module.exports.patchUserAvatar = async (req, res, next) => {
   const { avatar } = req.body;
   const userId = req.user._id;
 
@@ -85,13 +87,53 @@ module.exports.patchUserAvatar = async (req, res) => {
     if (newAvatar) {
       res.json(newAvatar);
     } else {
-      res.status(errorNotFoundCode).json({ message: 'User not found' });
+      throw new NotFoundError('User not found');
     }
   } catch (error) {
     if (error.name === 'ValidationError') {
-      res.status(errorIncorrectCode).json({ message: 'ValidationError' });
+      next(new IncorrectError('ValidationError'));
     } else {
-      res.status(errorCode).json({ message: 'Произошла ошибка' });
+      next(error);
+    }
+  }
+};
+
+module.exports.createUser = async (req, res, next) => {
+  const {
+    name,
+    about,
+    avatar,
+    email,
+    password,
+  } = req.body;
+
+  try {
+    if (validator.isEmail(email)) {
+      const findEmail = await User.findOne({ email });
+
+      if (findEmail) {
+        throw new ExistsEmailError('Пользователь с этой почтой уже существует');
+      }
+
+      const hash = await bcrypt.hash(password, 10);
+      const user = new User({
+        name,
+        about,
+        avatar,
+        email,
+        password: hash,
+      });
+      const newUser = await user.save();
+
+      res.status(201).json(newUser);
+    } else {
+      throw new IncorrectError('Некорректная почта');
+    }
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      next(new IncorrectError('ValidationError'));
+    } else {
+      next(error);
     }
   }
 };
