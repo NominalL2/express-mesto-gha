@@ -1,5 +1,4 @@
 const bcrypt = require('bcryptjs');
-const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const {
@@ -110,27 +109,23 @@ module.exports.createUser = async (req, res, next) => {
   } = req.body;
 
   try {
-    if (validator.isEmail(email)) {
-      const findEmail = await User.findOne({ email });
+    const findEmail = await User.findOne({ email });
 
-      if (findEmail) {
-        throw new ExistsEmailError('Пользователь с этой почтой уже существует');
-      }
-
-      const hash = await bcrypt.hash(password, 10);
-      const user = new User({
-        name,
-        about,
-        avatar,
-        email,
-        password: hash,
-      });
-      const newUser = await user.save();
-
-      res.status(201).json(newUser);
-    } else {
-      throw new IncorrectError('Некорректная почта');
+    if (findEmail) {
+      throw new ExistsEmailError('Пользователь с этой почтой уже существует');
     }
+
+    const hash = await bcrypt.hash(password, 10);
+    const user = new User({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    });
+    const newUser = await user.save();
+
+    res.status(201).json(newUser);
   } catch (error) {
     if (error.name === 'ValidationError') {
       next(new IncorrectError('ValidationError'));
