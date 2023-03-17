@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { celebrate, Joi } = require('celebrate');
+const { celebrate, Joi, Segments } = require('celebrate');
 
 const {
   getUsers,
@@ -27,7 +27,9 @@ router.patch('/me/avatar', celebrate({
 }), patchUserAvatar);
 
 router.get('/:userId', celebrate({
-  params: Joi.string().length(24).hex(),
+  [Segments.PARAMS]: Joi.object().keys({
+    userId: Joi.string().required().regex(/^[0-9a-fA-F]{24}$/),
+  }),
 }), getUser);
 
 module.exports = router;
