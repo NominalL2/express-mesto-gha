@@ -9,6 +9,16 @@ const { login, createUser } = require('./controllers/users');
 
 const auth = require('./middlewares/auth');
 
+const validationUser = celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().pattern(/^(http|https):\/\/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*#?)?$/),
+    email: Joi.string().email().required(),
+    password: Joi.string().required(),
+  }),
+});
+
 const router = express.Router();
 
 const { PORT = '3000' } = process.env;
@@ -21,45 +31,13 @@ mongoose.connect(process.env.MONGO_DB, {
   useNewUrlParser: true,
 });
 
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    avatar: Joi.string().pattern(/^(http|https):\/\/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*#?)?$/),
-    email: Joi.string().email().required(),
-    password: Joi.string().required(),
-  }),
-}), login);
+app.post('/signin', validationUser, login);
 
-app.post('/signup', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    avatar: Joi.string().pattern(/^(http|https):\/\/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*#?)?$/),
-    email: Joi.string().email().required(),
-    password: Joi.string().required(),
-  }),
-}), createUser);
+app.post('/signup', validationUser, createUser);
 
-app.use('/users', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    avatar: Joi.string().pattern(/^(http|https):\/\/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*#?)?$/),
-    email: Joi.string().email().required(),
-    password: Joi.string().required(),
-  }),
-}), auth, require('./routes/users'));
+app.use('/users', auth, require('./routes/users'));
 
-app.use('/cards', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().min(2).max(30).required(),
-    link: Joi.string().required().pattern(/^(http|https):\/\/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*#?)?$/),
-    owner: Joi.ref('User'),
-    likes: Joi.array().items(Joi.string().hex().length(24).required()),
-    createdAt: Joi.date(),
-  }),
-}), auth, require('./routes/cards'));
+app.use('/cards', auth, require('./routes/cards'));
 
 app.use(router.use('*', (req, res, next) => {
   next(new NotFoundError('Not Found'));

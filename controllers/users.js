@@ -57,7 +57,6 @@ module.exports.patchUser = async (req, res, next) => {
     const newName = await User.findByIdAndUpdate(
       userId,
       { name, about },
-      { new: true, runValidators: true },
     );
 
     if (newName) {
@@ -125,7 +124,13 @@ module.exports.createUser = async (req, res, next) => {
     });
     const newUser = await user.save();
 
-    res.status(201).json(newUser);
+    res.status(201).json({
+      name: newUser.name,
+      about: newUser.about,
+      avatar: newUser.avatar,
+      email: newUser.email,
+      _id: newUser._id,
+    });
   } catch (error) {
     if (error.name === 'ValidationError') {
       next(new IncorrectError('ValidationError'));
