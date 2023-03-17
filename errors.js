@@ -19,8 +19,24 @@ class ExistsEmailError extends Error {
   }
 }
 
+class AuthorizationError extends Error {
+  constructor(message) {
+    super(message);
+    this.statusCode = 401;
+  }
+}
+
+class AccessDeniedError extends Error {
+  constructor(message) {
+    super(message);
+    this.statusCode = 403;
+  }
+}
+
 module.exports = {
   NotFoundError,
   IncorrectError,
   ExistsEmailError,
+  AuthorizationError,
+  AccessDeniedError,
 };

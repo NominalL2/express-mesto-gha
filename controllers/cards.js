@@ -1,16 +1,20 @@
 const Card = require('../models/card');
-const { errorCode, errorNotFoundCode, errorIncorrectCode } = require('../errors');
+const {
+  NotFoundError,
+  IncorrectError,
+  AccessDeniedError,
+} = require('../errors');
 
-module.exports.getCards = async (req, res) => {
+module.exports.getCards = async (req, res, next) => {
   try {
     const cards = await Card.find();
     res.json(cards);
   } catch (error) {
-    res.status(errorCode).json({ message: 'Произошла ошибка' });
+    next(error);
   }
 };
 
-module.exports.postCard = async (req, res) => {
+module.exports.postCard = async (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
 
@@ -21,34 +25,38 @@ module.exports.postCard = async (req, res) => {
     res.status(201).json(newCard);
   } catch (error) {
     if (error.name === 'ValidationError') {
-      res.status(errorIncorrectCode).json({ message: 'ValidationError' });
+      next(new IncorrectError('ValidationError'));
     } else {
-      res.status(errorCode).json({ message: 'Произошла ошибка' });
+      next(error);
     }
   }
 };
 
-module.exports.deleteCard = async (req, res) => {
+module.exports.deleteCard = async (req, res, next) => {
   const { cardId } = req.params;
+  const userId = req.user._id;
 
   try {
-    const deleteCard = await Card.findByIdAndRemove(cardId);
+    const card = await Card.findById(cardId);
 
-    if (!deleteCard) {
-      res.status(errorNotFoundCode).json({ message: 'Карточка не найдена' });
+    if (!card) {
+      throw new NotFoundError('Карточка не найдена');
+    } else if (card.owner != userId) {
+      throw new AccessDeniedError('Нельзя удалить чужую карточку');
     } else {
+      await card.deleteOne();
       res.json({ message: 'Карточка успешно удалена' });
     }
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(errorIncorrectCode).json({ message: 'Некорректный Id' });
+      next(new IncorrectError('Некорректный Id'));
     } else {
-      res.status(errorCode).json({ message: 'Произошла ошибка' });
+      next(error);
     }
   }
 };
 
-module.exports.likeCard = async (req, res) => {
+module.exports.likeCard = async (req, res, next) => {
   const { cardId } = req.params;
   const userId = req.user._id;
 
@@ -60,20 +68,20 @@ module.exports.likeCard = async (req, res) => {
     );
 
     if (!like) {
-      res.status(errorNotFoundCode).json({ message: 'Карточка не найдена' });
+      throw new NotFoundError('Карточка не найдена');
     } else {
       res.json(like);
     }
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(errorIncorrectCode).json({ message: 'Некорректный Id' });
+      next(new IncorrectError('Некорректный Id'));
     } else {
-      res.status(errorCode).json({ message: 'Произошла ошибка' });
+      next(error);
     }
   }
 };
 
-module.exports.dislikeCard = async (req, res) => {
+module.exports.dislikeCard = async (req, res, next) => {
   const { cardId } = req.params;
   const userId = req.user._id;
 
@@ -85,15 +93,15 @@ module.exports.dislikeCard = async (req, res) => {
     );
 
     if (!dislike) {
-      res.status(errorNotFoundCode).json({ message: 'Карточка не найдена' });
+      throw new NotFoundError('Карточка не найдена');
     } else {
       res.json(dislike);
     }
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(errorIncorrectCode).json({ message: 'Некорректный Id' });
+      next(new IncorrectError('Некорректный Id'));
     } else {
-      res.status(errorCode).json({ message: 'Произошла ошибка' });
+      next(error);
     }
   }
 };

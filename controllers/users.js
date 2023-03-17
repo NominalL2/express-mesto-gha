@@ -1,7 +1,13 @@
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { NotFoundError, IncorrectError, ExistsEmailError } = require('../errors');
+const {
+  NotFoundError,
+  IncorrectError,
+  ExistsEmailError,
+  AuthorizationError,
+} = require('../errors');
 
 module.exports.getUsers = async (req, res, next) => {
   try {
@@ -32,19 +38,15 @@ module.exports.getUser = async (req, res, next) => {
   }
 };
 
-module.exports.postUser = async (req, res, next) => {
-  const { name, about, avatar } = req.body;
-  const user = new User({ name, about, avatar });
+module.exports.getMe = async (req, res, next) => {
+  const userId = req.user._id;
 
   try {
-    const newUser = await user.save();
-    res.status(201).json(newUser);
+    const user = await User.findById(userId);
+
+    res.json(user);
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      next(new IncorrectError('ValidationError'));
-    } else {
-      next();
-    }
+    next(error);
   }
 };
 
@@ -135,5 +137,35 @@ module.exports.createUser = async (req, res, next) => {
     } else {
       next(error);
     }
+  }
+};
+
+module.exports.login = async (req, res, next) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      throw new AuthorizationError('Неправельные логин или пароль');
+    }
+
+    const login = bcrypt.compare(password, user.password);
+    if (!login) {
+      throw new AuthorizationError('Неправельные логин или пароль');
+    }
+
+    const token = jwt.sign(
+      { _id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' },
+    );
+    res.cookie(
+      'jwt',
+      token,
+      { maxAge: 3600000 * 24 * 7 },
+      { httpOnly: true },
+    ).json({ token });
+  } catch (error) {
+    next(error);
   }
 };

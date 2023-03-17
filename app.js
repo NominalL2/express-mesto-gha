@@ -1,8 +1,13 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { celebrate, Joi, errors } = require('celebrate');
-const { errorNotFoundCode } = require('./errors');
+
+const { NotFoundError } = require('./errors');
+const { login, createUser } = require('./controllers/users');
+
+const auth = require('./middlewares/auth');
 
 const router = express.Router();
 
@@ -12,32 +17,36 @@ const app = express();
 
 app.use(bodyParser.json());
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '63ff8c1d4556462e4936a88a',
-  };
-
-  next();
-});
-
-mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
+mongoose.connect(process.env.MONGO_DB, {
   useNewUrlParser: true,
 });
 
+app.post('/signin', login);
+
+app.post('/signup', createUser);
+
 app.use('/users', celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30).default('Жак-Ив Кусто'),
-    about: Joi.string().min(2).max(30).default('Исследователь'),
-    avatar: Joi.string().default('https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png'),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().pattern(/^(http|https):\/\/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*#?)?$/),
     email: Joi.string().required(),
     password: Joi.string().required(),
   }),
-}), require('./routes/users'));
+}), auth, require('./routes/users'));
 
-app.use('/cards', require('./routes/cards'));
+app.use('/cards', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30).required(),
+    link: Joi.string().required().pattern(/^(http|https):\/\/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*#?)?$/),
+    owner: Joi.ref('User'),
+    likes: Joi.array().items(Joi.string().hex().length(24).required()),
+    createdAt: Joi.date(),
+  }),
+}), auth, require('./routes/cards'));
 
-app.use(router.use('*', (req, res) => {
-  res.status(errorNotFoundCode).json({ message: 'Not Found' });
+app.use(router.use('*', (req, res, next) => {
+  next(new NotFoundError('Not Found'));
 }));
 
 app.use(errors());
@@ -49,7 +58,7 @@ app.use((err, req, res, next) => {
     .status(statusCode)
     .json({
       message: statusCode === 500
-        ? 'На сервере произошла ошибка'
+        ? 'На сервере поизошла ошибка'
         : message,
     });
 
