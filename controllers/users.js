@@ -57,7 +57,7 @@ module.exports.patchUser = async (req, res, next) => {
     const newName = await User.findByIdAndUpdate(
       userId,
       { name, about },
-      { new: true },
+      { new: true, runValidators: true },
     );
 
     if (newName) {

@@ -31,7 +31,12 @@ mongoose.connect(process.env.MONGO_DB, {
   useNewUrlParser: true,
 });
 
-app.post('/signin', validationUser, login);
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().email().required(),
+    password: Joi.string().required(),
+  }),
+}), login);
 
 app.post('/signup', validationUser, createUser);
 
@@ -39,7 +44,7 @@ app.use('/users', auth, require('./routes/users'));
 
 app.use('/cards', auth, require('./routes/cards'));
 
-app.use(router.use('*', (req, res, next) => {
+app.use(auth, router.use('*', (req, res, next) => {
   next(new NotFoundError('Not Found'));
 }));
 

@@ -21,9 +21,6 @@ router.post('/', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30).required(),
     link: Joi.string().required().pattern(/^(http|https):\/\/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*#?)?$/),
-    owner: Joi.ref('User'),
-    likes: Joi.array().items(Joi.string().hex().length(24).required()),
-    createdAt: Joi.date(),
   }),
 }), postCard);
 
