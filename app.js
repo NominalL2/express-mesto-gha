@@ -72,7 +72,7 @@ app.use((err, req, res, next) => {
     .status(statusCode)
     .json({
       message: statusCode === 500
-        ? message
+        ? 'На сервере произошла ошибка'
         : message,
     });
 
