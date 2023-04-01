@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const { celebrate, Joi, errors } = require('celebrate');
+const cookieParser = require('cookie-parser');
 
 const NotFoundError = require('./errors/NotFoundError');
 const { login, createUser } = require('./controllers/users');
@@ -26,6 +27,8 @@ const router = express.Router();
 const { PORT = '3000' } = process.env;
 
 const app = express();
+
+app.use(cookieParser());
 
 app.use(express.json());
 
