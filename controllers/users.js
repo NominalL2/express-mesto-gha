@@ -151,12 +151,13 @@ module.exports.login = async (req, res, next) => {
       JWT_SECRET,
       { expiresIn: '7d' },
     );
-    res.cookie(
-      'jwt',
-      token,
-      { maxAge: 3600000 * 24 * 7 },
-      { httpOnly: true },
-    ).json({ message: 'Вход прошел успешно' });
+    // res.cookie(
+    //   'jwt',
+    //   token,
+    //   { maxAge: 3600000 * 24 * 7 },
+    //   { httpOnly: true },
+    // ).json({ message: 'Вход прошел успешно' });
+    res.status(200).json({ token });
   } catch (error) {
     next(error);
   }
