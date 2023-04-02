@@ -3,7 +3,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const { errors } = require('celebrate');
 const cookieParser = require('cookie-parser');
-const cors = require('cors');
 
 const NotFoundError = require('./errors/NotFoundError');
 const { login, createUser } = require('./controllers/users');
@@ -24,8 +23,6 @@ const router = express.Router();
 const { PORT = '3000' } = process.env;
 
 const app = express();
-
-app.use(cors());
 
 app.use(express.json());
 
